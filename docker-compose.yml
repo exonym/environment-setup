@@ -1,0 +1,79 @@
+version: '3.8'
+
+nginx-proxy:
+    container_name: nginx-proxy
+    image: jwilder/nginx-proxy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - conf:/etc/nginx/conf.d
+      - certs:/etc/nginx/certs:ro
+      - vhost:/etc/nginx/vhost.d
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - html:/usr/share/nginx/html
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: true
+    networks:
+      - static-data-network
+
+nginx:
+    image: nginx:alpine
+    container_name: fileserver
+    restart: always
+    expose:
+      - "80"
+    environment:
+      - VIRTUAL_HOST=trust.exonym.io
+      - VIRTUAL_PORT=80
+      - LETSENCRYPT_HOST=trust.exonym.io
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    volumes:
+      - /var/sftp/uploads:/usr/share/nginx/html:ro
+    networks:
+      - static-data-network
+nginx-proxy-letsencrypt:
+    container_name: nginx-proxy-letsencrypt
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    depends_on:
+      - "nginx-proxy"
+    restart: always
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - conf:/etc/nginx/conf.d
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    networks:
+      - static-data-network
+
+networks:
+  static-data-network:
+    name: static-data-network
+
+volumes:
+  certs:
+   driver: local-persist
+   driver_opts:
+     mountpoint: ${PATH_TO_REPO}/nginx/certs/
+  conf:
+   driver: local-persist
+   driver_opts:
+     mountpoint: ${PATH_TO_REPO}/nginx/conf.d/
+  vhost:
+   driver: local-persist
+   driver_opts:
+     mountpoint: ${PATH_TO_REPO}/nginx/vhost/
+  html:
+   driver: local-persist
+   driver_opts:
+     mountpoint: ${PATH_TO_REPO}/nginx/html/
+  acme:
+   driver: local-persist
+   driver_opts:
+     mountpoint: ${PATH_TO_REPO}/nginx/acme/
