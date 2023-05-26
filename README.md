@@ -1,5 +1,3 @@
-# 🚧 WIP
-
 # Rulebook Node Static Data Replication
 This repository contains all the necessary tools and scripts to set up a lightweight file repository for Rulebook Node static data replication. 
 
@@ -68,6 +66,10 @@ sudo usermod -a -G admin <an unusual username>
 
 It is advisable to disable direct root logins over SSH. Open the SSH server configuration file for editing:
 
+> ⚠️ If you have enabled key access, don't forget to change the key access to the new user. 
+  
+
+
 ```shell
 sudo pico /etc/ssh/sshd_config
 ```
@@ -120,7 +122,7 @@ To set up an SFTP user on Ubuntu OS, follow the instructions below:
 2. Create a strong password and put it in the envfile for the rulebook node, `SFTP_PASSWORD`.
 
     ```
-    openssl rand -hex 32
+    openssl rand -base64 32
     ```
     > Be careful not to check this into a repo by accident.  If you do, it must be changed. 
 
@@ -229,16 +231,16 @@ To install Docker on Ubuntu, follow these step-by-step instructions:
 
    ```shell
    sudo systemctl start docker
-   sudo systemctl status docker
+   docker --version
    ```
 
-   This will start the Docker service and display its status, indicating whether it is running successfully.
-
-With these instructions, you can successfully install Docker on your Ubuntu system and start using Docker containers.
+This will start the Docker service and display its status, indicating whether it is running successfully.
 
 ## Install Local Persist
 
 To install Local Persist for Docker, follow the instructions below:
+
+> ⚠️ You must switch user to `root` as this installation step will not work with `sudo`
 
 1. Open a terminal on your system.
 
@@ -269,8 +271,52 @@ To install Local Persist for Docker, follow the instructions below:
 With these instructions, you can install Local Persist for Docker on your system and ensure that your system is up to date with the latest package upgrades.
 
 # Produce the SFTP Fingerprints
+Using `ssh-keyscan` for obtaining and verifying SSH server fingerprints in SFTP offers several benefits. It enables server identification, protecting against man-in-the-middle attacks by comparing fingerprints with trusted sources. 
 
-___ 
+```
+ssh-keyscan static.exonym.io
+```
+
+You should get an output as follows:  `...` indicates data has been removed.
+
+```
+static.exonym.io ssh-rsa AAAAB3NzaC1yc2EAAAADAQAB...hDkQcnS+Iggzs9+FkuHgoBstJ+MiT69hnFOFhS7zuDveGQ7gCHCZU=
+
+static.exonym.io ecdsa-sha2-nistp256 AAAAE2VjZHNhLXN...Wnd2GCm0GFjnBbcx8tVeWIBt+rhHk8ZecxhKSMCLIuTI=
+
+static.exonym.io ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMZcM3xdTq24Pp47J8xJZ8iXuxUP/MvyBBNBLzwfm5l6
+
+```
+In your rulebook node envfile; insert these values into variables; `export KNOWN_HOST0="static.ex..."`, `KNOWN_HOST1`, and `KNOWN_HOST2` being careful not to truncate the data.
+
+# Everything should be set up.
+
+Let's start the fileserver and get a TLS certificate.
+
+   ```
+   cd /home/<username>
+   git clone https://github.com/exonym/environment-setup.git
+   mv environment-setup static-fileserver
+   cd static-fileserver
+   pico envfile.env
+   su root
+   ```
+
+
+Enter the password. _(TODO - non-root docker set-up)_
+   ```
+   docker compose up -d
+   cd /var/sftp/uploads
+   echo "hello world" > file.html
+   ```
+
+Open browser and navigate to your static domain and you should see "hello world" and the TLS connection is secured.
+
+The Rulebook Node will publish to this location and the static data will be accessible to all, even during node maintenance. 
+
+If you are a Source you can set up your connections publish and bring down your note and only bringing it up when you need to make changes.
+
+
 # Disclaimer
 
 Please note that while this repository is designed for robust and reliable operation, data replication involves inherent risks. Always make sure to have backup systems in place and regularly verify the integrity of your data. This repository is provided as-is, and the maintainers cannot be held responsible for any data loss.
