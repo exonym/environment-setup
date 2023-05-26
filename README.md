@@ -295,13 +295,11 @@ Let's start the fileserver and get a TLS certificate.
 
    ```
    cd /home/<username>
-   git clone https://github.com/exonym/environment-setup.git
-   mv environment-setup static-fileserver
+   git clone https://github.com/exonym/static-fileserver.git
    cd static-fileserver
-   pico envfile.env
+   pico envfile.env // make changes
    su root
    ```
-
 
 Enter the password. _(TODO - non-root docker set-up)_
    ```
@@ -312,9 +310,26 @@ Enter the password. _(TODO - non-root docker set-up)_
 
 Open browser and navigate to your static domain and you should see "hello world" and the TLS connection is secured.
 
-The Rulebook Node will publish to this location and the static data will be accessible to all, even during node maintenance. 
+The Rulebook Node will publish to; 
 
-If you are a Source you can set up your connections publish and bring down your note and only bringing it up when you need to make changes.
+```
+https://static.example.com/STATIC_DATA_FOLDER/rulebook.json
+https://static.example.com/STATIC_DATA_FOLDER/x-node/
+https://static.example.com/STATIC_DATA_FOLDER/x-source/
+```
+The files are indexed via: 
+
+```
+https://static.example.com/x-node/signatures.xml
+```
+
+The static data will be accessible to all, even during node maintenance. 
+
+Recall that you can use this fileserver for all your Rulebook Nodes and even publish a static website on the location too. 
+
+Simply use `STATIC_DATA_FOLDER` as a namespace.
+
+If you are a Source you can set up your connections publish and bring down your node, only bringing it up when you need to add and remove Advocates.
 
 
 # Disclaimer
