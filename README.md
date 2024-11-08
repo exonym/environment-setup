@@ -1,3 +1,7 @@
+>
+> This is no longer needed as replication takes place across all rulebook nodes. 
+>
+
 # Rulebook Node Static Data Replication
 This repository contains all the necessary tools and scripts to set up a lightweight file repository for Rulebook Node static data replication. 
 
